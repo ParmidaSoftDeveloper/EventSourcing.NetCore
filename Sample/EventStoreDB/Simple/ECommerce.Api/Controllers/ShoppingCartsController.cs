@@ -8,6 +8,7 @@ using ECommerce.ShoppingCarts.GettingCarts;
 using ECommerce.ShoppingCarts.Initializing;
 using ECommerce.ShoppingCarts.ProductItems;
 using ECommerce.ShoppingCarts.RemovingProductItem;
+using MediatR;
 
 namespace ECommerce.Api.Controllers;
 
@@ -16,30 +17,28 @@ public class ShoppingCartsController: Controller
 {
     [HttpPost]
     public async Task<IActionResult> InitializeCart(
-        [FromServices] Func<Guid> generateId,
-        [FromServices] Func<InitializeShoppingCart, CancellationToken, ValueTask> handle,
+        [FromServices] IMediator mediator,
         [FromBody] InitializeShoppingCartRequest? request,
-        CancellationToken ct
-    )
+        CancellationToken ct)
     {
         if (request == null)
             throw new ArgumentNullException(nameof(request));
 
-        var cartId = generateId();
+        var cartId = Guid.NewGuid();
 
         var command = InitializeShoppingCart.From(
             cartId,
             request.ClientId
         );
 
-        await handle(command, ct);
+        await mediator.Send(command, ct);
 
         return Created("api/ShoppingCarts", cartId);
     }
 
     [HttpPost("{id}/products")]
     public async Task<IActionResult> AddProduct(
-        [FromServices] Func<AddProductItemToShoppingCart, CancellationToken, ValueTask> handle,
+        [FromServices] IMediator mediator,
         [FromRoute] Guid id,
         [FromBody] AddProductRequest? request,
         CancellationToken ct
@@ -56,7 +55,7 @@ public class ShoppingCartsController: Controller
             )
         );
 
-        await handle(command, ct);
+        await mediator.Send(command, ct);
 
         return Ok();
     }
@@ -108,17 +107,20 @@ public class ShoppingCartsController: Controller
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(
-        [FromServices] Func<GetCartById, CancellationToken, Task<ShoppingCartDetails?>> query,
+        [FromServices] IMediator mediator,
         Guid id,
         CancellationToken ct
     )
     {
-        var result = await query(GetCartById.From(id), ct);
+        var query = GetCartById.From(id);
+
+        var result = await mediator.Send(query, ct);
 
         if (result == null)
             return NotFound();
 
         Response.TrySetETagResponseHeader(result.Version.ToString());
+
         return Ok(result);
     }
 

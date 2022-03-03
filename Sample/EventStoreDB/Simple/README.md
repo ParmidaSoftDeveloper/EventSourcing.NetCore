@@ -1,3 +1,16 @@
+# EventStore Sample Links
+- [Projections in Event Sourcing: Build ANY model you want!](https://www.youtube.com/watch?v=bTRjO6JK4Ws)
+- [oskardudycz/EventSourcing.NetCore/EventStoreDB/Simple](https://github.com/oskardudycz/EventSourcing.NetCore/tree/main/Sample/EventStoreDB/Simple
+- [Add optimistic concurrency to samples](https://github.com/oskardudycz/EventSourcing.NetCore/pull/100)
+- [How to build event-driven projections with Entity Framework](https://event-driven.io/en/how_to_do_events_projections_with_entity_framework/)
+- [Practical introduction to Event Sourcing with EventStoreDB](https://www.youtube.com/watch?v=rqYPVzjoxqI)
+- [Event Store Webinar: Migrating from TCP to gRPC](https://www.youtube.com/watch?v=-4_KTfVkjlQ)
+- [Migration to gRPC client](https://developers.eventstore.com/clients/dotnet/5.0/migration-to-gRPC.html#update-the-target-framework)
+
+# Concurrency Links
+- [Add optimistic concurrency to samples](https://github.com/oskardudycz/EventSourcing.NetCore/pull/100)
+- [Optimistic concurrency for pessimistic times](https://event-driven.io/en/optimistic_concurrency_for_pessimistic_times/)
+
 # Simple, practical EventSourcing with EventStoreDB and EntityFramework
 
 The is the simple Event Sourcing setup with EventStoreDB. For the Read Model, Postgres and Entity Framework are used.

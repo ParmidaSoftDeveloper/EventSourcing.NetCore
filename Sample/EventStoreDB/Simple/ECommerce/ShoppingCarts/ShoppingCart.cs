@@ -1,26 +1,27 @@
 ﻿using ECommerce.ShoppingCarts.ProductItems;
+using MediatR;
 
 namespace ECommerce.ShoppingCarts;
 
 public record ShoppingCartInitialized(
     Guid ShoppingCartId,
     Guid ClientId
-);
+): INotification;
 
 public record ProductItemAddedToShoppingCart(
     Guid ShoppingCartId,
     PricedProductItem ProductItem
-);
+): INotification;
 
 public record ProductItemRemovedFromShoppingCart(
     Guid ShoppingCartId,
     PricedProductItem ProductItem
-);
+): INotification;
 
 public record ShoppingCartConfirmed(
     Guid ShoppingCartId,
     DateTime ConfirmedAt
-);
+): INotification;
 
 public enum ShoppingCartStatus
 {
@@ -55,29 +56,19 @@ public record ShoppingCart(
                 },
 
             ProductItemAddedToShoppingCart (_, var productItem) =>
-                entity with
-                {
-                    ProductItems = entity.ProductItems.Add(productItem)
-                },
+                entity with { ProductItems = entity.ProductItems.Add(productItem) },
 
             ProductItemRemovedFromShoppingCart (_, var productItem) =>
-                entity with
-                {
-                    ProductItems = entity.ProductItems.Remove(productItem)
-                },
+                entity with { ProductItems = entity.ProductItems.Remove(productItem) },
 
             ShoppingCartConfirmed (_, var confirmedAt) =>
-                entity with
-                {
-                    Status = ShoppingCartStatus.Confirmed,
-                    ConfirmedAt = confirmedAt
-                },
+                entity with { Status = ShoppingCartStatus.Confirmed, ConfirmedAt = confirmedAt },
             _ => entity
         };
     }
 
     public static ShoppingCart Default() =>
-        new (default, default, default, ProductItemsList.Empty(), default);
+        new(default, default, default, ProductItemsList.Empty(), default);
 
     public static string MapToStreamId(Guid shoppingCartId) =>
         $"ShoppingCart-{shoppingCartId}";

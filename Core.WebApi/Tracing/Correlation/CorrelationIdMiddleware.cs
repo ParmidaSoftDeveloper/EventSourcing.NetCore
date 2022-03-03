@@ -7,7 +7,8 @@ using Microsoft.Extensions.Logging;
 namespace Core.WebApi.Tracing.Correlation;
 
 // Inspired by great Steve Gordon's work: https://github.com/stevejgordon/CorrelationId
-
+// https://code-maze.com/dependency-injection-lifetimes-aspnet-core/
+// https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-6.0#service-lifetimes
 public class CorrelationIdMiddleware
 {
     private const string CorrelationIdHeaderName = "X-Correlation-ID";
@@ -15,22 +16,20 @@ public class CorrelationIdMiddleware
 
     private readonly RequestDelegate next;
     private readonly ILogger<CorrelationIdMiddleware> logger;
-    private readonly Func<CorrelationId> correlationIdFactory;
 
-    public CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger, Func<CorrelationId> correlationIdFactory)
+    public CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
     {
         this.next = next ?? throw new ArgumentNullException(nameof(next));
         this.logger = logger;
-        this.correlationIdFactory = correlationIdFactory;
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task Invoke(HttpContext context, Func<CorrelationId> funcCorrelation)
     {
         // get correlation id from header or generate a new one
         context.TraceIdentifier =
             context.Request.Headers.TryGetValue(CorrelationIdHeaderName, out var correlationId)
                 ? correlationId
-                : correlationIdFactory().Value;
+                : funcCorrelation().Value;
 
 
         // apply the correlation ID to the response header for client side tracking

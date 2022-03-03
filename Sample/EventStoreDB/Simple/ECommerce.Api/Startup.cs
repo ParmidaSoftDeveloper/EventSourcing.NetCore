@@ -31,7 +31,7 @@ public class Startup
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ECommerce.Api", Version = "v1" });
                 c.OperationFilter<MetadataOperationFilter>();
             })
-            .AddCoreServices(Configuration)
+            .AddCoreServices(Configuration, typeof(IECommerceAssembly).Assembly)
             .AddEventStoreDBSubscriptionToAll()
             .AddECommerceModule(Configuration)
             .AddCorrelationIdMiddleware()

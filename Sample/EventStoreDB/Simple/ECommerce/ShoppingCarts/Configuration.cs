@@ -21,20 +21,20 @@ public static class Configuration
                 ShoppingCart.Default,
                 ShoppingCart.When,
                 builder => builder
-                    .AddOn<InitializeShoppingCart>(
-                        InitializeShoppingCart.Handle,
-                        command => ShoppingCart.MapToStreamId(command.ShoppingCartId)
-                    )
-                    .UpdateOn<AddProductItemToShoppingCart>(
-                        sp =>
-                            (command, shoppingCart) =>
-                                AddProductItemToShoppingCart.Handle(
-                                    sp.GetRequiredService<IProductPriceCalculator>(),
-                                    command,
-                                    shoppingCart
-                                ),
-                        command => ShoppingCart.MapToStreamId(command.ShoppingCartId)
-                    )
+                    // .AddOn<InitializeShoppingCart>(
+                    //     InitializeShoppingCart.Handle,
+                    //     command => ShoppingCart.MapToStreamId(command.ShoppingCartId)
+                    // )
+                    // .UpdateOn<AddProductItemToShoppingCart>(
+                    //     sp =>
+                    //         (command, shoppingCart) =>
+                    //             AddProductItemToShoppingCart.Handle(
+                    //                 sp.GetRequiredService<IProductPriceCalculator>(),
+                    //                 command,
+                    //                 shoppingCart
+                    //             ),
+                    //     command => ShoppingCart.MapToStreamId(command.ShoppingCartId)
+                    // )
                     .UpdateOn<RemoveProductItemFromShoppingCart>(
                         RemoveProductItemFromShoppingCart.Handle,
                         command => ShoppingCart.MapToStreamId(command.ShoppingCartId)
@@ -44,25 +44,25 @@ public static class Configuration
                         command => ShoppingCart.MapToStreamId(command.ShoppingCartId)
                     )
             )
-            .For<ShoppingCartDetails, ECommerceDbContext>(
-                builder => builder
-                    .AddOn<ShoppingCartInitialized>(ShoppingCartDetailsProjection.Handle)
-                    .UpdateOn<ProductItemAddedToShoppingCart>(
-                        e => e.ShoppingCartId,
-                        ShoppingCartDetailsProjection.Handle,
-                        (entry, ct) => entry.Collection(x => x.ProductItems).LoadAsync(ct)
-                    )
-                    .UpdateOn<ProductItemRemovedFromShoppingCart>(
-                        e => e.ShoppingCartId,
-                        ShoppingCartDetailsProjection.Handle,
-                        (entry, ct) => entry.Collection(x => x.ProductItems).LoadAsync(ct)
-                    )
-                    .UpdateOn<ShoppingCartConfirmed>(
-                        e => e.ShoppingCartId,
-                        ShoppingCartDetailsProjection.Handle
-                    )
-                    .QueryWith<GetCartById>(GetCartById.Handle)
-            )
+            // .For<ShoppingCartDetails, ECommerceDbContext>(
+            //     builder => builder
+            //         .AddOn<ShoppingCartInitialized>(ShoppingCartDetailsProjection.Handle)
+            //         .UpdateOn<ProductItemAddedToShoppingCart>(
+            //             e => e.ShoppingCartId,
+            //             ShoppingCartDetailsProjection.Handle,
+            //             (entry, ct) => entry.Collection(x => x.ProductItems).LoadAsync(ct)
+            //         )
+            //         .UpdateOn<ProductItemRemovedFromShoppingCart>(
+            //             e => e.ShoppingCartId,
+            //             ShoppingCartDetailsProjection.Handle,
+            //             (entry, ct) => entry.Collection(x => x.ProductItems).LoadAsync(ct)
+            //         )
+            //         .UpdateOn<ShoppingCartConfirmed>(
+            //             e => e.ShoppingCartId,
+            //             ShoppingCartDetailsProjection.Handle
+            //         )
+            //         .QueryWith<GetCartById>(GetCartById.Handle)
+            // )
             .For<ShoppingCartShortInfo, ECommerceDbContext>(
                 builder => builder
                     .AddOn<ShoppingCartInitialized>(ShoppingCartShortInfoProjection.Handle)

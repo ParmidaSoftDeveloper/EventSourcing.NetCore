@@ -2,8 +2,10 @@ using Core.Events;
 using Core.Events.NoMediator;
 using Core.EventStoreDB.Events;
 using Core.Threading;
+using ECommerce.Core.Projections;
 using EventStore.Client;
 using Grpc.Core;
+using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace Core.EventStoreDB.Subscriptions;
@@ -24,6 +26,7 @@ public class EventStoreDBSubscriptionToAllOptions
 public class EventStoreDBSubscriptionToAll
 {
     private readonly INoMediatorEventBus noMediatorEventBus;
+    private readonly IProjectionPublisher projectionPublisher;
     private readonly EventStoreClient eventStoreClient;
     private readonly ISubscriptionCheckpointRepository checkpointRepository;
     private readonly ILogger<EventStoreDBSubscriptionToAll> logger;
@@ -35,11 +38,13 @@ public class EventStoreDBSubscriptionToAll
     public EventStoreDBSubscriptionToAll(
         EventStoreClient eventStoreClient,
         INoMediatorEventBus noMediatorEventBus,
+        IProjectionPublisher projectionPublisher,
         ISubscriptionCheckpointRepository checkpointRepository,
         ILogger<EventStoreDBSubscriptionToAll> logger
     )
     {
         this.noMediatorEventBus = noMediatorEventBus ?? throw new ArgumentNullException(nameof(noMediatorEventBus));
+        this.projectionPublisher = projectionPublisher;
         this.eventStoreClient = eventStoreClient ?? throw new ArgumentNullException(nameof(eventStoreClient));
         this.checkpointRepository =
             checkpointRepository ?? throw new ArgumentNullException(nameof(checkpointRepository));
@@ -59,7 +64,7 @@ public class EventStoreDBSubscriptionToAll
         var checkpoint = await checkpointRepository.Load(SubscriptionId, ct);
 
         await eventStoreClient.SubscribeToAllAsync(
-            checkpoint == null? FromAll.Start : FromAll.After(new Position(checkpoint.Value, checkpoint.Value)),
+            checkpoint == null ? FromAll.Start : FromAll.After(new Position(checkpoint.Value, checkpoint.Value)),
             HandleEvent,
             subscriptionOptions.ResolveLinkTos,
             HandleDrop,
@@ -99,6 +104,8 @@ public class EventStoreDBSubscriptionToAll
 
             // publish event to internal event bus
             await noMediatorEventBus.Publish(streamEvent, ct);
+
+            await projectionPublisher.PublishAsync(streamEvent, ct);
 
             await checkpointRepository.Store(SubscriptionId, resolvedEvent.Event.Position.CommitPosition, ct);
         }

@@ -8,6 +8,7 @@ using Microsoft.Net.Http.Headers;
 
 namespace Core.WebApi.OptimisticConcurrency;
 
+// https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-6.0#service-lifetimes
 public class OptimisticConcurrencyMiddleware
 {
     private readonly RequestDelegate next;
@@ -78,6 +79,7 @@ public static class OptimisticConcurrencyMiddlewareConfig
         Func<IServiceProvider, Func<string?>>? getNextVersion = null
     )
     {
+        // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-6.0#service-lifetimes
         services.TryAddScoped<IExpectedResourceVersionProvider>(sp =>
             new ExpectedResourceVersionProvider(trySetExpectedVersion?.Invoke(sp)));
         services.TryAddScoped<INextResourceVersionProvider>(sp =>

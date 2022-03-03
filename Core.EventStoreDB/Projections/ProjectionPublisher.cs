@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using Core.Events;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ECommerce.Core.Projections;
 
-public class ProjectionPublisher : IProjectionPublisher
+public class ProjectionPublisher: IProjectionPublisher
 {
     private readonly IServiceProvider _serviceProvider;
 
@@ -16,13 +13,27 @@ public class ProjectionPublisher : IProjectionPublisher
         _serviceProvider = serviceProvider;
     }
 
-    public async Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default) where T : INotification
+    public async Task PublishAsync<T>(StreamEvent<T> streamEvent, CancellationToken cancellationToken = default)
+        where T : INotification
     {
         using var scope = _serviceProvider.CreateScope();
         var projections = scope.ServiceProvider.GetRequiredService<IEnumerable<IProjection>>();
         foreach (var projection in projections)
         {
-            await projection.ProcessEventAsync(@event, cancellationToken);
+            await projection.ProcessEventAsync(streamEvent, cancellationToken);
         }
+    }
+
+    public Task PublishAsync(StreamEvent streamEvent, CancellationToken cancellationToken = default)
+    {
+        var streamData = streamEvent.Data.GetType();
+
+        var method = typeof(IProjectionPublisher)
+            .GetMethods()
+            .Single(m => m.Name == nameof(PublishAsync) && m.GetGenericArguments().Any())
+            .MakeGenericMethod(streamData);
+
+        return (Task)method
+            .Invoke(this, new object[] { streamEvent, cancellationToken })!;
     }
 }

@@ -1,12 +1,21 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Core.EventStoreDB.OptimisticConcurrency;
+using Core.EventStoreDB.Repository;
+using ECommerce.Core.EventStoreDB;
 using ECommerce.Pricing.ProductPricing;
 using ECommerce.ShoppingCarts.ProductItems;
+using EventStore.Client;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ECommerce.ShoppingCarts.AddingProductItem;
 
 public record AddProductItemToShoppingCart(
     Guid ShoppingCartId,
     ProductItem ProductItem
-)
+): IRequest<ProductItemAddedToShoppingCart>
 {
     public static AddProductItemToShoppingCart From(Guid? cartId, ProductItem? productItem)
     {
@@ -17,23 +26,53 @@ public record AddProductItemToShoppingCart(
 
         return new AddProductItemToShoppingCart(cartId.Value, productItem);
     }
+}
 
-    public static ProductItemAddedToShoppingCart Handle(
-        IProductPriceCalculator productPriceCalculator,
-        AddProductItemToShoppingCart command,
-        ShoppingCart shoppingCart
-    )
+public class AddProductItemToShoppingCartHandler:
+    IRequestHandler<AddProductItemToShoppingCart, ProductItemAddedToShoppingCart>
+{
+    private readonly IProductPriceCalculator productPriceCalculator;
+    private readonly EventStoreClient eventStoreClient;
+    private readonly IServiceProvider serviceProvider;
+
+
+    public AddProductItemToShoppingCartHandler(IProductPriceCalculator productPriceCalculator,
+        EventStoreClient eventStoreClient, IServiceProvider serviceProvider)
+    {
+        this.productPriceCalculator = productPriceCalculator;
+        this.eventStoreClient = eventStoreClient;
+        this.serviceProvider = serviceProvider;
+    }
+
+    public async Task<ProductItemAddedToShoppingCart> Handle(AddProductItemToShoppingCart command, CancellationToken
+        cancellationToken)
     {
         var (cartId, productItem) = command;
 
-        if(shoppingCart.IsClosed)
-            throw new InvalidOperationException($"Adding product item for cart in '{shoppingCart.Status}' status is not allowed.");
+        var shoppingCart = await eventStoreClient.Find(
+            ShoppingCart.Default,
+            ShoppingCart.When,
+            ShoppingCart.MapToStreamId(cartId),
+            cancellationToken);
+
+        if (shoppingCart.IsClosed)
+            throw new InvalidOperationException(
+                $"Adding product item for cart in '{shoppingCart.Status}' status is not allowed.");
 
         var pricedProductItem = productPriceCalculator.Calculate(productItem);
-
-        return new ProductItemAddedToShoppingCart(
+        var @event = new ProductItemAddedToShoppingCart(
             cartId,
             pricedProductItem
         );
+
+        var version = serviceProvider.GetRequiredService<EventStoreDBExpectedStreamRevisionProvider>().Value;
+
+        // handling optimistic concurrency
+        var nextVersion = await eventStoreClient.Append(ShoppingCart.MapToStreamId(cartId), @event, version ?? 0,
+            cancellationToken);
+
+        serviceProvider.GetRequiredService<EventStoreDBNextStreamRevisionProvider>().Set(nextVersion);
+
+        return @event;
     }
 }
