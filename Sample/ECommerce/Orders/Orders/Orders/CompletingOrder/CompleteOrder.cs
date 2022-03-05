@@ -1,5 +1,5 @@
 using Core.Commands;
-using Core.Marten.OptimisticConcurrency;
+using Core.Marten.Events;
 using Core.Marten.Repository;
 using MediatR;
 
@@ -22,11 +22,11 @@ public class HandleCompleteOrder:
     ICommandHandler<CompleteOrder>
 {
     private readonly IMartenRepository<Order> orderRepository;
-    private readonly MartenOptimisticConcurrencyScope scope;
+    private readonly IMartenAppendScope scope;
 
     public HandleCompleteOrder(
         IMartenRepository<Order> orderRepository,
-        MartenOptimisticConcurrencyScope scope
+        IMartenAppendScope scope
     )
     {
         this.orderRepository = orderRepository;
@@ -35,11 +35,12 @@ public class HandleCompleteOrder:
 
     public async Task<Unit> Handle(CompleteOrder command, CancellationToken cancellationToken)
     {
-        await scope.Do(expectedVersion =>
+        await scope.Do((expectedVersion, traceMetadata) =>
             orderRepository.GetAndUpdate(
                 command.OrderId,
                 order => order.Complete(),
                 expectedVersion,
+                traceMetadata,
                 cancellationToken
             )
         );

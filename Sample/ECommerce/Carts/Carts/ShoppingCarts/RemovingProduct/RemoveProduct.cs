@@ -1,6 +1,6 @@
 using Carts.ShoppingCarts.Products;
 using Core.Commands;
-using Core.Marten.OptimisticConcurrency;
+using Core.Marten.Events;
 using Core.Marten.Repository;
 using MediatR;
 
@@ -24,11 +24,11 @@ internal class HandleRemoveProduct:
     ICommandHandler<RemoveProduct>
 {
     private readonly IMartenRepository<ShoppingCart> cartRepository;
-    private readonly MartenOptimisticConcurrencyScope scope;
+    private readonly IMartenAppendScope scope;
 
     public HandleRemoveProduct(
         IMartenRepository<ShoppingCart> cartRepository,
-        MartenOptimisticConcurrencyScope scope
+        IMartenAppendScope scope
     )
     {
         this.cartRepository = cartRepository;
@@ -39,11 +39,12 @@ internal class HandleRemoveProduct:
     {
         var (cartId, productItem) = command;
 
-        await scope.Do(expectedVersion =>
+        await scope.Do((expectedVersion, traceMetadata) =>
             cartRepository.GetAndUpdate(
                 cartId,
                 cart => cart.RemoveProduct(productItem),
                 expectedVersion,
+                traceMetadata,
                 cancellationToken
             )
         );

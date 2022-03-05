@@ -1,5 +1,5 @@
 using Core.Commands;
-using Core.Marten.OptimisticConcurrency;
+using Core.Marten.Events;
 using Core.Marten.Repository;
 using MediatR;
 using Orders.Products;
@@ -37,11 +37,11 @@ public class HandleInitializeOrder:
     ICommandHandler<InitializeOrder>
 {
     private readonly IMartenRepository<Order> orderRepository;
-    private readonly MartenOptimisticConcurrencyScope scope;
+    private readonly IMartenAppendScope scope;
 
     public HandleInitializeOrder(
         IMartenRepository<Order> orderRepository,
-        MartenOptimisticConcurrencyScope scope
+        IMartenAppendScope scope
     )
     {
         this.orderRepository = orderRepository;
@@ -52,9 +52,10 @@ public class HandleInitializeOrder:
     {
         var (orderId, clientId, productItems, totalPrice) = command;
 
-        await scope.Do(_ =>
+        await scope.Do((_, eventMetadata) =>
             orderRepository.Add(
                 Order.Initialize(orderId, clientId, productItems, totalPrice),
+                eventMetadata,
                 cancellationToken
             )
         );

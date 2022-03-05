@@ -18,7 +18,7 @@ public record RemoveProduct(
         if (productItem == null)
             throw new ArgumentOutOfRangeException(nameof(productItem));
 
-        return new(cartId.Value, productItem);
+        return new RemoveProduct(cartId.Value, productItem);
     }
 }
 
@@ -26,11 +26,11 @@ internal class HandleRemoveProduct:
     ICommandHandler<RemoveProduct>
 {
     private readonly IEventStoreDBRepository<ShoppingCart> cartRepository;
-    private readonly EventStoreDBOptimisticConcurrencyScope scope;
+    private readonly IEventStoreDBAppendScope scope;
 
     public HandleRemoveProduct(
         IEventStoreDBRepository<ShoppingCart> cartRepository,
-        EventStoreDBOptimisticConcurrencyScope scope
+        IEventStoreDBAppendScope scope
     )
     {
         this.cartRepository = cartRepository;
@@ -39,11 +39,14 @@ internal class HandleRemoveProduct:
 
     public async Task<Unit> Handle(RemoveProduct command, CancellationToken cancellationToken)
     {
-        await scope.Do(expectedRevision =>
+        var (cartId, pricedProductItem) = command;
+
+        await scope.Do((expectedRevision, eventMetadata) =>
             cartRepository.GetAndUpdate(
-                command.CartId,
-                cart => cart.RemoveProduct(command.ProductItem),
+                cartId,
+                cart => cart.RemoveProduct(pricedProductItem),
                 expectedRevision,
+                eventMetadata,
                 cancellationToken
             )
         );

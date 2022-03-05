@@ -1,11 +1,11 @@
+using System.Linq.Expressions;
 using Core.Api.Testing;
 using Core.Commands;
 using Core.Events;
 using Core.Events.External;
 using Core.Requests;
-using MediatR;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using IEventBus = Core.Events.IEventBus;
 
 namespace Core.Testing;
 
@@ -16,11 +16,11 @@ public abstract class ApiWithEventsFixture<TStartup>: ApiFixture<TStartup> where
     private readonly DummyExternalCommandBus externalCommandBus = new();
 
     public override TestContext CreateTestContext() =>
-        new TestContext<TStartup>(GetConfiguration, (services) =>
+        new TestContext<TStartup>(GetConfiguration, services =>
         {
             SetupServices?.Invoke(services);
             services.AddSingleton(eventsLog);
-            services.AddSingleton(typeof(INotificationHandler<>), typeof(EventListener<>));
+            services.AddSingleton(typeof(IEventHandler<>), typeof(EventListener<>));
             services.AddSingleton<IExternalEventProducer>(externalEventProducer);
             services.AddSingleton<IExternalCommandBus>(externalCommandBus);
             services.AddSingleton<IExternalEventConsumer, DummyExternalEventConsumer>();
@@ -46,10 +46,40 @@ public abstract class ApiWithEventsFixture<TStartup>: ApiFixture<TStartup> where
         await eventBus.Publish(@event, ct);
     }
 
-    public IReadOnlyCollection<TEvent> PublishedInternalEventsOfType<TEvent>()
+    public IReadOnlyCollection<TEvent> PublishedInternalEventsOfType<TEvent>() =>
+        eventsLog.PublishedEvents.OfType<TEvent>().ToList();
+
+    // TODO: Add Poly here
+    public async Task ShouldPublishInternalEventOfType<TEvent>(
+        Expression<Func<TEvent, bool>> predicate,
+        int maxNumberOfRetries = 5,
+        int retryIntervalInMs = 1000)
     {
-        return eventsLog.PublishedEvents.OfType<TEvent>().ToList();
+        var retryCount = maxNumberOfRetries;
+        var finished = false;
+
+        do
+        {
+            try
+            {
+                PublishedInternalEventsOfType<TEvent>().Should()
+                    .HaveCount(1)
+                    .And.Contain(predicate);
+
+                finished = true;
+            }
+            catch
+            {
+                if (retryCount == 0)
+                    throw;
+            }
+
+            await Task.Delay(retryIntervalInMs);
+            retryCount--;
+        } while (!finished);
     }
+
+
 }
 
 public abstract class ApiWithEventsFixture: ApiFixture

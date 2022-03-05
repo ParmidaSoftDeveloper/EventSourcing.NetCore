@@ -1,5 +1,4 @@
 using Core.Events;
-using Core.Events.NoMediator;
 using Core.EventStoreDB.Events;
 using Core.Threading;
 using ECommerce.Core.Projections;
@@ -25,8 +24,8 @@ public class EventStoreDBSubscriptionToAllOptions
 
 public class EventStoreDBSubscriptionToAll
 {
-    private readonly INoMediatorEventBus noMediatorEventBus;
     private readonly IProjectionPublisher projectionPublisher;
+    private readonly IEventBus eventBus;
     private readonly EventStoreClient eventStoreClient;
     private readonly ISubscriptionCheckpointRepository checkpointRepository;
     private readonly ILogger<EventStoreDBSubscriptionToAll> logger;
@@ -37,14 +36,14 @@ public class EventStoreDBSubscriptionToAll
 
     public EventStoreDBSubscriptionToAll(
         EventStoreClient eventStoreClient,
-        INoMediatorEventBus noMediatorEventBus,
         IProjectionPublisher projectionPublisher,
+        IEventBus eventBus,
         ISubscriptionCheckpointRepository checkpointRepository,
         ILogger<EventStoreDBSubscriptionToAll> logger
     )
     {
-        this.noMediatorEventBus = noMediatorEventBus ?? throw new ArgumentNullException(nameof(noMediatorEventBus));
         this.projectionPublisher = projectionPublisher;
+        this.eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
         this.eventStoreClient = eventStoreClient ?? throw new ArgumentNullException(nameof(eventStoreClient));
         this.checkpointRepository =
             checkpointRepository ?? throw new ArgumentNullException(nameof(checkpointRepository));
@@ -103,7 +102,7 @@ public class EventStoreDBSubscriptionToAll
             }
 
             // publish event to internal event bus
-            await noMediatorEventBus.Publish(streamEvent, ct);
+            await eventBus.Publish(streamEvent, ct);
 
             await projectionPublisher.PublishAsync(streamEvent, ct);
 

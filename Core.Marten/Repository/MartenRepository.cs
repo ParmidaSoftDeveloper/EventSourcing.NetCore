@@ -1,5 +1,5 @@
 using Core.Aggregates;
-using Core.Events;
+using Core.Tracing;
 using Marten;
 
 namespace Core.Marten.Repository;
@@ -7,30 +7,30 @@ namespace Core.Marten.Repository;
 public interface IMartenRepository<T> where T : class, IAggregate
 {
     Task<T?> Find(Guid id, CancellationToken cancellationToken);
-    Task<long> Add(T aggregate, CancellationToken cancellationToken);
-    Task<long> Update(T aggregate, long? expectedVersion = null, CancellationToken cancellationToken = default);
-    Task<long> Delete(T aggregate, long? expectedVersion = null, CancellationToken cancellationToken = default);
+    Task<long> Add(T aggregate, TraceMetadata? eventMetadata = null, CancellationToken cancellationToken = default);
+    Task<long> Update(T aggregate, long? expectedVersion = null, TraceMetadata? traceMetadata = null, CancellationToken cancellationToken = default);
+    Task<long> Delete(T aggregate, long? expectedVersion = null, TraceMetadata? eventMetadata = null, CancellationToken cancellationToken = default);
 }
 
 public class MartenRepository<T>: IMartenRepository<T> where T : class, IAggregate
 {
     private readonly IDocumentSession documentSession;
-    private readonly IEventBus eventBus;
 
     public MartenRepository(
-        IDocumentSession documentSession,
-        IEventBus eventBus
+        IDocumentSession documentSession
     )
     {
         this.documentSession = documentSession;
-        this.eventBus = eventBus;
     }
 
     public Task<T?> Find(Guid id, CancellationToken cancellationToken) =>
         documentSession.Events.AggregateStreamAsync<T>(id, token: cancellationToken);
 
-    public async Task<long> Add(T aggregate, CancellationToken cancellationToken)
+    public async Task<long> Add(T aggregate, TraceMetadata? traceMetadata = null, CancellationToken cancellationToken = default)
     {
+        documentSession.CorrelationId = traceMetadata?.CorrelationId?.Value;
+        documentSession.CausationId = traceMetadata?.CausationId?.Value;
+
         var events = aggregate.DequeueUncommittedEvents();
 
         documentSession.Events.StartStream<Aggregate>(
@@ -39,13 +39,15 @@ public class MartenRepository<T>: IMartenRepository<T> where T : class, IAggrega
         );
 
         await documentSession.SaveChangesAsync(cancellationToken);
-        await eventBus.Publish(events, cancellationToken);
 
         return events.Length;
     }
 
-    public async Task<long> Update(T aggregate, long? expectedVersion = null, CancellationToken cancellationToken = default)
+    public async Task<long> Update(T aggregate, long? expectedVersion = null, TraceMetadata? traceMetadata = null, CancellationToken cancellationToken = default)
     {
+        documentSession.CorrelationId = traceMetadata?.CorrelationId?.Value;
+        documentSession.CausationId = traceMetadata?.CausationId?.Value;
+
         var events = aggregate.DequeueUncommittedEvents();
 
         var nextVersion = expectedVersion.HasValue ?
@@ -59,11 +61,10 @@ public class MartenRepository<T>: IMartenRepository<T> where T : class, IAggrega
         );
 
         await documentSession.SaveChangesAsync(cancellationToken);
-        await eventBus.Publish(events, cancellationToken);
 
         return nextVersion;
     }
 
-    public Task<long> Delete(T aggregate, long? expectedVersion = null, CancellationToken cancellationToken = default) =>
-        Update(aggregate, expectedVersion, cancellationToken);
+    public Task<long> Delete(T aggregate, long? expectedVersion = null, TraceMetadata? traceMetadata = null, CancellationToken cancellationToken = default) =>
+        Update(aggregate, expectedVersion, traceMetadata, cancellationToken);
 }

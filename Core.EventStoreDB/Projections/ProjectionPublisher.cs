@@ -13,7 +13,7 @@ public class ProjectionPublisher: IProjectionPublisher
         _serviceProvider = serviceProvider;
     }
 
-    public async Task PublishAsync<T>(StreamEvent<T> streamEvent, CancellationToken cancellationToken = default)
+    public async Task PublishAsync<T>(EventEnvelope<T> streamEvent, CancellationToken cancellationToken = default)
         where T : INotification
     {
         using var scope = _serviceProvider.CreateScope();
@@ -24,7 +24,7 @@ public class ProjectionPublisher: IProjectionPublisher
         }
     }
 
-    public Task PublishAsync(StreamEvent streamEvent, CancellationToken cancellationToken = default)
+    public Task PublishAsync(EventEnvelope streamEvent, CancellationToken cancellationToken = default)
     {
         var streamData = streamEvent.Data.GetType();
 

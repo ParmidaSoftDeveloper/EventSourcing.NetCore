@@ -1,5 +1,5 @@
 using Core.Commands;
-using Core.Marten.OptimisticConcurrency;
+using Core.Marten.Events;
 using Core.Marten.Repository;
 using MediatR;
 
@@ -28,11 +28,11 @@ internal class HandleChangeReservationSeat:
     ICommandHandler<ChangeReservationSeat>
 {
     private readonly IMartenRepository<Reservation> repository;
-    private readonly MartenOptimisticConcurrencyScope scope;
+    private readonly IMartenAppendScope scope;
 
     public HandleChangeReservationSeat(
         IMartenRepository<Reservation> repository,
-        MartenOptimisticConcurrencyScope scope
+        IMartenAppendScope scope
     )
     {
         this.repository = repository;
@@ -41,11 +41,12 @@ internal class HandleChangeReservationSeat:
 
     public async Task<Unit> Handle(ChangeReservationSeat command, CancellationToken cancellationToken)
     {
-        await scope.Do(expectedVersion =>
+        await scope.Do((expectedVersion, traceMetadata) =>
             repository.GetAndUpdate(
                 command.ReservationId,
                 reservation => reservation.ChangeSeat(command.SeatId),
                 expectedVersion,
+                traceMetadata,
                 cancellationToken
             )
         );

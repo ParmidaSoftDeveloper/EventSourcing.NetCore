@@ -1,6 +1,5 @@
 using System.Reflection;
 using Core.BackgroundWorkers;
-using Core.Events.NoMediator;
 using Core.EventStoreDB.OptimisticConcurrency;
 using Core.EventStoreDB.Subscriptions;
 using ECommerce.Core.Projections;
@@ -29,11 +28,8 @@ public static class EventStoreDBConfigExtensions
         var eventStoreDBConfig = config.GetSection(DefaultConfigKey).Get<EventStoreDBConfig>();
 
         services
-            .AddEventBus()
             .AddSingleton(new EventStoreClient(EventStoreClientSettings.Create(eventStoreDBConfig.ConnectionString)))
-            .AddScoped<EventStoreDBExpectedStreamRevisionProvider, EventStoreDBExpectedStreamRevisionProvider>()
-            .AddScoped<EventStoreDBNextStreamRevisionProvider, EventStoreDBNextStreamRevisionProvider>()
-            .AddScoped<EventStoreDBOptimisticConcurrencyScope, EventStoreDBOptimisticConcurrencyScope>()
+            .AddEventStoreDBAppendScope()
             .AddTransient<EventStoreDBSubscriptionToAll, EventStoreDBSubscriptionToAll>();
 
         if (options?.UseInternalCheckpointing != false)

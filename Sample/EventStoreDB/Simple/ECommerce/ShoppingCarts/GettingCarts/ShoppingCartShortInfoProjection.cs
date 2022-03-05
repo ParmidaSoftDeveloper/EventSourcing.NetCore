@@ -4,7 +4,7 @@ namespace ECommerce.ShoppingCarts.GettingCarts;
 
 public class ShoppingCartShortInfoProjection
 {
-    public static ShoppingCartShortInfo Handle(StreamEvent<ShoppingCartInitialized> @event)
+    public static ShoppingCartShortInfo Handle(EventEnvelope<ShoppingCartInitialized> @event)
     {
         var (shoppingCartId, clientId) = @event.Data;
 
@@ -19,7 +19,7 @@ public class ShoppingCartShortInfoProjection
         };
     }
 
-    public static void Handle(StreamEvent<ShoppingCartConfirmed> @event, ShoppingCartShortInfo view)
+    public static void Handle(EventEnvelope<ShoppingCartConfirmed> @event, ShoppingCartShortInfo view)
     {
         if (view.LastProcessedPosition >= @event.Metadata.LogPosition)
             return;
@@ -29,7 +29,7 @@ public class ShoppingCartShortInfoProjection
         view.LastProcessedPosition = @event.Metadata.LogPosition;
     }
 
-    public static void Handle(StreamEvent<ProductItemAddedToShoppingCart> @event, ShoppingCartShortInfo view)
+    public static void Handle(EventEnvelope<ProductItemAddedToShoppingCart> @event, ShoppingCartShortInfo view)
     {
         if (view.LastProcessedPosition >= @event.Metadata.LogPosition)
             return;
@@ -42,7 +42,7 @@ public class ShoppingCartShortInfoProjection
         view.LastProcessedPosition = @event.Metadata.LogPosition;
     }
 
-    public static void Handle(StreamEvent<ProductItemRemovedFromShoppingCart> @event, ShoppingCartShortInfo view)
+    public static void Handle(EventEnvelope<ProductItemRemovedFromShoppingCart> @event, ShoppingCartShortInfo view)
     {
         if (view.LastProcessedPosition >= @event.Metadata.LogPosition)
             return;

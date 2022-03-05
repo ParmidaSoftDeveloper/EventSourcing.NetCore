@@ -1,12 +1,11 @@
 ﻿using Core.Events;
-using Core.Events.NoMediator;
 using Core.Projections;
 using Marten;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Core.Marten.ExternalProjections;
 
-public class MartenExternalProjection<TEvent, TView>: INoMediatorEventHandler<StreamEvent<TEvent>>
+public class MartenExternalProjection<TEvent, TView>: IEventHandler<EventEnvelope<TEvent>>
     where TView : IVersionedProjection
     where TEvent : notnull
 {
@@ -22,17 +21,19 @@ public class MartenExternalProjection<TEvent, TView>: INoMediatorEventHandler<St
         this.getId = getId;
     }
 
-    public async Task Handle(StreamEvent<TEvent> @event, CancellationToken ct)
+    public async Task Handle(EventEnvelope<TEvent> eventEnvelope, CancellationToken ct)
     {
-        var entity = await session.LoadAsync<TView>(getId(@event.Data), ct) ??
+        var (@event, eventMetadata) = eventEnvelope;
+
+        var entity = await session.LoadAsync<TView>(getId(@event), ct) ??
                      (TView)Activator.CreateInstance(typeof(TView), true)!;
 
-        var eventLogPosition = @event.Metadata.LogPosition;
+        var eventLogPosition = eventMetadata.LogPosition;
 
         if (entity.LastProcessedPosition >= eventLogPosition)
             return;
 
-        entity.When(@event.Data);
+        entity.When(@event);
 
         entity.LastProcessedPosition = eventLogPosition;
 
@@ -59,7 +60,7 @@ public static class MartenExternalProjectionConfig
         where TEvent : notnull
     {
         services
-            .AddTransient<INoMediatorEventHandler<StreamEvent<TEvent>>>(sp =>
+            .AddTransient<IEventHandler<EventEnvelope<TEvent>>>(sp =>
             {
                 var session = sp.GetRequiredService<IDocumentSession>();
 

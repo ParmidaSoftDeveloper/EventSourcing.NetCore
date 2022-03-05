@@ -1,5 +1,5 @@
-﻿using System.Reflection;
-using Core.Events.NoMediator;
+using System.Reflection;
+using Core.Events;
 using Core.EventStoreDB;
 using MediatR;
 using Microsoft.Extensions.Configuration;

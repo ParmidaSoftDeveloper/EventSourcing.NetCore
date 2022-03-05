@@ -1,5 +1,5 @@
 using Core.Commands;
-using Core.Marten.OptimisticConcurrency;
+using Core.Marten.Events;
 using Core.Marten.Repository;
 using MediatR;
 
@@ -22,11 +22,11 @@ internal class HandleConfirmCart:
     ICommandHandler<ConfirmShoppingCart>
 {
     private readonly IMartenRepository<ShoppingCart> cartRepository;
-    private readonly MartenOptimisticConcurrencyScope scope;
+    private readonly IMartenAppendScope scope;
 
     public HandleConfirmCart(
         IMartenRepository<ShoppingCart> cartRepository,
-        MartenOptimisticConcurrencyScope scope
+        IMartenAppendScope scope
     )
     {
         this.cartRepository = cartRepository;
@@ -35,11 +35,12 @@ internal class HandleConfirmCart:
 
     public async Task<Unit> Handle(ConfirmShoppingCart command, CancellationToken cancellationToken)
     {
-        await scope.Do(expectedVersion =>
+        await scope.Do((expectedVersion, traceMetadata) =>
             cartRepository.GetAndUpdate(
                 command.CartId,
                 cart => cart.Confirm(),
                 expectedVersion,
+                traceMetadata,
                 cancellationToken
             )
         );

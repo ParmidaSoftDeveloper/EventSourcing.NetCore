@@ -1,11 +1,13 @@
 using Core.Ids;
+using Core.Marten.Events;
 using Core.Marten.Ids;
-using Core.Marten.OptimisticConcurrency;
-using Core.Threading;
+using Core.Marten.Subscriptions;
 using Marten;
 using Marten.Events.Daemon.Resiliency;
+using Marten.Events.Projections;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Weasel.Core;
 
 namespace Core.Marten;
@@ -21,61 +23,42 @@ public class Config
 
     public bool ShouldRecreateDatabase { get; set; } = false;
 
-    public DaemonMode DaemonMode { get; set; } = DaemonMode.Disabled;
+    public DaemonMode DaemonMode { get; set; } = DaemonMode.Solo;
+
+    public bool UseMetadata = true;
 }
 
 public static class MartenConfigExtensions
 {
     private const string DefaultConfigKey = "EventStore";
 
-    public static IServiceCollection AddMarten(this IServiceCollection services, IConfiguration config,
-        Action<StoreOptions>? configureOptions = null, string configKey = DefaultConfigKey)
+    public static IServiceCollection AddMarten(
+        this IServiceCollection services,
+        IConfiguration config,
+        Action<StoreOptions>? configureOptions = null,
+        string configKey = DefaultConfigKey
+    )
     {
         var martenConfig = config.GetSection(configKey).Get<Config>();
 
         services
             .AddScoped<IIdGenerator, MartenIdGenerator>()
-            .AddScoped<MartenOptimisticConcurrencyScope, MartenOptimisticConcurrencyScope>()
-            .AddScoped<MartenExpectedStreamVersionProvider, MartenExpectedStreamVersionProvider>()
-            .AddScoped<MartenNextStreamVersionProvider, MartenNextStreamVersionProvider>();
-
-        var documentStore = services
-            .AddMarten(options =>
-            {
-                SetStoreOptions(options, martenConfig, configureOptions);
-            })
-            .AddAsyncDaemon(DaemonMode.Solo)
-            .InitializeStore();
-
-        SetupSchema(documentStore, martenConfig, 1);
+            .AddScoped<IMartenAppendScope, MartenAppendScope>()
+            .AddMartenAppendScope()
+            .AddMarten(sp => SetStoreOptions(sp, martenConfig, configureOptions))
+            .ApplyAllDatabaseChangesOnStartup()
+            .AddAsyncDaemon(DaemonMode.Solo);
 
         return services;
     }
 
-    private static void SetupSchema(IDocumentStore documentStore, Config martenConfig, int retryLeft = 1)
+    private static StoreOptions SetStoreOptions(
+        IServiceProvider serviceProvider,
+        Config config,
+        Action<StoreOptions>? configureOptions = null
+    )
     {
-        try
-        {
-            if (martenConfig.ShouldRecreateDatabase)
-                documentStore.Advanced.Clean.CompletelyRemoveAll();
-
-            using (NoSynchronizationContextScope.Enter())
-            {
-                documentStore.Schema.ApplyAllConfiguredChangesToDatabaseAsync().Wait();
-            }
-        }
-        catch
-        {
-            if (retryLeft == 0) throw;
-
-            Thread.Sleep(1000);
-            SetupSchema(documentStore, martenConfig, --retryLeft);
-        }
-    }
-
-    private static void SetStoreOptions(StoreOptions options, Config config,
-        Action<StoreOptions>? configureOptions = null)
-    {
+        var options = new StoreOptions();
         options.Connection(config.ConnectionString);
         options.AutoCreateSchemaObjects = AutoCreate.CreateOrUpdate;
 
@@ -88,6 +71,23 @@ public static class MartenConfigExtensions
             nonPublicMembersStorage: NonPublicMembersStorage.All
         );
 
+        options.Projections.Add(
+            new MartenSubscription(
+                new[] { new MartenEventPublisher(serviceProvider) },
+                serviceProvider.GetRequiredService<ILogger<MartenSubscription>>()
+            ),
+            ProjectionLifecycle.Async,
+            "MartenSubscription"
+        );
+
         configureOptions?.Invoke(options);
+
+        if (config.UseMetadata)
+        {
+            options.Events.MetadataConfig.CausationIdEnabled = true;
+            options.Events.MetadataConfig.CorrelationIdEnabled = true;
+        }
+
+        return options;
     }
 }

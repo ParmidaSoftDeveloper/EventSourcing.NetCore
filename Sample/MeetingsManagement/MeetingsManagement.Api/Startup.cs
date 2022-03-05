@@ -7,7 +7,7 @@ using Core.Kafka;
 using Core.WebApi.Middlewares.ExceptionHandling;
 using Core.WebApi.OptimisticConcurrency;
 using Core.WebApi.Swagger;
-using Core.WebApi.Tracing.Correlation;
+using Core.WebApi.Tracing;
 using Marten.Exceptions;
 using Microsoft.OpenApi.Models;
 
@@ -35,8 +35,8 @@ public class Startup
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Meeting Management", Version = "v1" });
                 c.OperationFilter<MetadataOperationFilter>();
             })
-            .AddCoreServices()
             .AddKafkaProducerAndConsumer()
+            .AddCoreServices()
             .AddMeetingsManagement(config)
             .AddCorrelationIdMiddleware()
             .AddOptimisticConcurrencyMiddleware(

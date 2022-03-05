@@ -5,8 +5,8 @@ namespace ECommerce.Core.Projections;
 
 public interface IProjectionPublisher
 {
-    Task PublishAsync<T>(StreamEvent<T> streamEvent, CancellationToken cancellationToken = default)
+    Task PublishAsync<T>(EventEnvelope<T> streamEvent, CancellationToken cancellationToken = default)
         where T : INotification;
 
-    Task PublishAsync(StreamEvent streamEvent, CancellationToken cancellationToken = default);
+    Task PublishAsync(EventEnvelope streamEvent, CancellationToken cancellationToken = default);
 }

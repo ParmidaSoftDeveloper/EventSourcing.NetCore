@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.ShoppingCarts.GettingCartById;
 
+// https://zimarev.com/blog/event-sourcing/projections/
 public class ShoppingCartDetailsProjection: IProjection
 {
     private readonly ECommerceDbContext eCommerceDbContext;
@@ -15,39 +16,45 @@ public class ShoppingCartDetailsProjection: IProjection
         this.eCommerceDbContext = eCommerceDbContext;
     }
 
-    public async Task ProjectAsync<T>(StreamEvent<T> streamEvent, CancellationToken cancellationToken = default)
-    where T : INotification
+    public async Task ProjectAsync<T>(EventEnvelope<T> streamEvent, CancellationToken cancellationToken = default)
+        where T : INotification
     {
         switch (streamEvent.Data)
         {
             case ShoppingCartInitialized shoppingCartInitialized:
-                await Apply(shoppingCartInitialized, cancellationToken);
+                await Apply(shoppingCartInitialized, streamEvent.Metadata, cancellationToken);
                 break;
             case ShoppingCartConfirmed shoppingCartConfirmed:
-                await Apply(shoppingCartConfirmed, cancellationToken);
+                await Apply(shoppingCartConfirmed, streamEvent.Metadata, cancellationToken);
                 break;
             case ProductItemAddedToShoppingCart productItemAddedToShoppingCart:
-                await Apply(productItemAddedToShoppingCart, cancellationToken);
+                await Apply(productItemAddedToShoppingCart, streamEvent.Metadata, cancellationToken);
                 break;
             case ProductItemRemovedFromShoppingCart productItemRemovedFromShoppingCart:
-                await Apply(productItemRemovedFromShoppingCart, cancellationToken);
+                await Apply(productItemRemovedFromShoppingCart, streamEvent.Metadata, cancellationToken);
                 break;
         }
     }
 
-    private async Task Apply(ShoppingCartInitialized @event, CancellationToken cancellationToken = default)
+    private async Task Apply(ShoppingCartInitialized @event, EventMetadata metadata,
+        CancellationToken cancellationToken = default)
     {
         var (shoppingCartId, clientId) = @event;
 
         var newShoppingCartDetails = new ShoppingCartDetails
         {
-            Id = shoppingCartId, ClientId = clientId, Status = ShoppingCartStatus.Pending, Version = 0
+            Id = shoppingCartId,
+            ClientId = clientId,
+            Status = ShoppingCartStatus.Pending,
+            Version = 0,
+            LastProcessedPosition = metadata.LogPosition
         };
         await eCommerceDbContext.Set<ShoppingCartDetails>().AddAsync(newShoppingCartDetails, cancellationToken);
         await eCommerceDbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task Apply(ShoppingCartConfirmed @event, CancellationToken cancellationToken = default)
+    private async Task Apply(ShoppingCartConfirmed @event, EventMetadata metadata,
+        CancellationToken cancellationToken = default)
     {
         var shoppingCartDetails = await ShoppingCartDetails(@event.ShoppingCartId, cancellationToken);
 
@@ -56,9 +63,13 @@ public class ShoppingCartDetailsProjection: IProjection
 
         shoppingCartDetails.Status = ShoppingCartStatus.Confirmed;
         shoppingCartDetails.Version++;
+        shoppingCartDetails.LastProcessedPosition = metadata.LogPosition;
+
+        await eCommerceDbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task Apply(ProductItemAddedToShoppingCart @event, CancellationToken cancellationToken = default)
+    private async Task Apply(ProductItemAddedToShoppingCart @event, EventMetadata metadata,
+        CancellationToken cancellationToken = default)
     {
         var shoppingCartDetails = await ShoppingCartDetails(@event.ShoppingCartId, cancellationToken);
 
@@ -84,11 +95,13 @@ public class ShoppingCartDetailsProjection: IProjection
         }
 
         shoppingCartDetails.Version++;
+        shoppingCartDetails.LastProcessedPosition = metadata.LogPosition;
 
         await eCommerceDbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task Apply(ProductItemRemovedFromShoppingCart @event, CancellationToken cancellationToken = default)
+    private async Task Apply(ProductItemRemovedFromShoppingCart @event, EventMetadata metadata,
+        CancellationToken cancellationToken = default)
     {
         var shoppingCartDetails = await ShoppingCartDetails(@event.ShoppingCartId, cancellationToken);
 
@@ -109,6 +122,7 @@ public class ShoppingCartDetailsProjection: IProjection
         }
 
         shoppingCartDetails.Version++;
+        shoppingCartDetails.LastProcessedPosition = metadata.LogPosition;
 
         await eCommerceDbContext.SaveChangesAsync(cancellationToken);
     }
@@ -117,5 +131,4 @@ public class ShoppingCartDetailsProjection: IProjection
     {
         return eCommerceDbContext.Set<ShoppingCartDetails>().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
-
 }

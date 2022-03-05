@@ -3,6 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Core.EventStoreDB.OptimisticConcurrency;
 using Core.EventStoreDB.Repository;
+using Core.Tracing;
+using Core.Tracing.Causation;
+using Core.Tracing.Correlation;
 using ECommerce.Core.EventStoreDB;
 using ECommerce.Pricing.ProductPricing;
 using ECommerce.ShoppingCarts.ProductItems;
@@ -67,8 +70,14 @@ public class AddProductItemToShoppingCartHandler:
 
         var version = serviceProvider.GetRequiredService<EventStoreDBExpectedStreamRevisionProvider>().Value;
 
+        var traceMetadata = new TraceMetadata(
+            serviceProvider.GetRequiredService<ICorrelationIdProvider>().Get(),
+            serviceProvider.GetRequiredService<ICausationIdProvider>().Get()
+        );
+
         // handling optimistic concurrency
         var nextVersion = await eventStoreClient.Append(ShoppingCart.MapToStreamId(cartId), @event, version ?? 0,
+            traceMetadata,
             cancellationToken);
 
         serviceProvider.GetRequiredService<EventStoreDBNextStreamRevisionProvider>().Set(nextVersion);

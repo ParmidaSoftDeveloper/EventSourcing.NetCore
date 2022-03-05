@@ -1,5 +1,5 @@
 using Core.Commands;
-using Core.Marten.OptimisticConcurrency;
+using Core.Marten.Events;
 using Core.Marten.Repository;
 using MediatR;
 
@@ -25,11 +25,11 @@ public class HandleTimeOutPayment:
     ICommandHandler<TimeOutPayment>
 {
     private readonly IMartenRepository<Payment> paymentRepository;
-    private readonly MartenOptimisticConcurrencyScope scope;
+    private readonly IMartenAppendScope scope;
 
     public HandleTimeOutPayment(
         IMartenRepository<Payment> paymentRepository,
-        MartenOptimisticConcurrencyScope scope
+        IMartenAppendScope scope
     )
     {
         this.paymentRepository = paymentRepository;
@@ -40,12 +40,14 @@ public class HandleTimeOutPayment:
     {
         var (paymentId, _) = command;
 
-        await scope.Do(expectedVersion =>
+        await scope.Do((expectedVersion, traceMetadata) =>
             paymentRepository.GetAndUpdate(
                 paymentId,
                 payment => payment.TimeOut(),
                 expectedVersion,
-                cancellationToken)
+                traceMetadata,
+                cancellationToken
+            )
         );
         return Unit.Value;
     }

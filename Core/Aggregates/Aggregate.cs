@@ -16,6 +16,11 @@ public abstract class Aggregate<T>: IAggregate<T> where T : notnull
 
     public virtual void When(object @event) { }
 
+    public void Apply(object @event)
+    {
+        When(@event);
+    }
+
     public IEvent[] DequeueUncommittedEvents()
     {
         var dequeuedEvents = uncommittedEvents.ToArray();

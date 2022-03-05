@@ -1,4 +1,7 @@
 ﻿using Core.EventStoreDB.OptimisticConcurrency;
+using Core.Tracing;
+using Core.Tracing.Causation;
+using Core.Tracing.Correlation;
 using ECommerce.Core.EventStoreDB;
 using EventStore.Client;
 using MediatR;
@@ -22,15 +25,15 @@ public record InitializeShoppingCart(
     }
 }
 
-public class InitializeShoppingCartHandler : IRequestHandler<InitializeShoppingCart, ShoppingCartInitialized>
+public class InitializeShoppingCartHandler: IRequestHandler<InitializeShoppingCart, ShoppingCartInitialized>
 {
     private readonly EventStoreClient eventStoreClient;
-    private readonly EventStoreDBNextStreamRevisionProvider eventStoreDbNextStreamRevisionProvider;
+    private readonly IServiceProvider serviceProvider;
 
-    public InitializeShoppingCartHandler(EventStoreClient eventStoreClient, EventStoreDBNextStreamRevisionProvider eventStoreDbNextStreamRevisionProvider)
+    public InitializeShoppingCartHandler(EventStoreClient eventStoreClient, IServiceProvider serviceProvider)
     {
         this.eventStoreClient = eventStoreClient;
-        this.eventStoreDbNextStreamRevisionProvider = eventStoreDbNextStreamRevisionProvider;
+        this.serviceProvider = serviceProvider;
     }
 
     public async Task<ShoppingCartInitialized> Handle(InitializeShoppingCart command,
@@ -43,10 +46,18 @@ public class InitializeShoppingCartHandler : IRequestHandler<InitializeShoppingC
             clientId
         );
 
-       var nextVersion = await eventStoreClient.Append(ShoppingCart.MapToStreamId(command.ShoppingCartId), @event,
-       cancellationToken);
+        var eventStoreDbNextStreamRevisionProvider =
+            serviceProvider.GetRequiredService<EventStoreDBNextStreamRevisionProvider>();
 
-       eventStoreDbNextStreamRevisionProvider.Set(nextVersion);
+        var traceMetadata = new TraceMetadata(
+            serviceProvider.GetRequiredService<ICorrelationIdProvider>().Get(),
+            serviceProvider.GetRequiredService<ICausationIdProvider>().Get()
+        );
+
+        var nextVersion = await eventStoreClient.Append(ShoppingCart.MapToStreamId(command.ShoppingCartId), @event,
+            traceMetadata, cancellationToken);
+
+        eventStoreDbNextStreamRevisionProvider.Set(nextVersion);
 
         return @event;
     }
