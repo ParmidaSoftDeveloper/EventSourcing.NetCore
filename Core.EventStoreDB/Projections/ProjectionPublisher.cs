@@ -20,7 +20,7 @@ public class ProjectionPublisher: IProjectionPublisher
         var projections = scope.ServiceProvider.GetRequiredService<IEnumerable<IProjection>>();
         foreach (var projection in projections)
         {
-            await projection.ProcessEventAsync(streamEvent, cancellationToken);
+            await projection.ProjectAsync(streamEvent, cancellationToken);
         }
     }
 

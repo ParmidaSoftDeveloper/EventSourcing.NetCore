@@ -6,7 +6,9 @@
 - [Practical introduction to Event Sourcing with EventStoreDB](https://www.youtube.com/watch?v=rqYPVzjoxqI)
 - [Event Store Webinar: Migrating from TCP to gRPC](https://www.youtube.com/watch?v=-4_KTfVkjlQ)
 - [Migration to gRPC client](https://developers.eventstore.com/clients/dotnet/5.0/migration-to-gRPC.html#update-the-target-framework)
-
+- [How to get the current entity state from events?](https://event-driven.io/en/how_to_get_the_current_entity_state_in_event_sourcing/)
+- [Entities as event streams](https://zimarev.com/blog/event-sourcing/entities-as-streams)
+- [Global event stream](https://zimarev.com/blog/event-sourcing/all-stream/)
 # Concurrency Links
 - [Add optimistic concurrency to samples](https://github.com/oskardudycz/EventSourcing.NetCore/pull/100)
 - [Optimistic concurrency for pessimistic times](https://event-driven.io/en/optimistic_concurrency_for_pessimistic_times/)

@@ -15,7 +15,7 @@ public class ShoppingCartDetailsProjection: IProjection
         this.eCommerceDbContext = eCommerceDbContext;
     }
 
-    public async Task ProcessEventAsync<T>(StreamEvent<T> streamEvent, CancellationToken cancellationToken = default)
+    public async Task ProjectAsync<T>(StreamEvent<T> streamEvent, CancellationToken cancellationToken = default)
     where T : INotification
     {
         switch (streamEvent.Data)
