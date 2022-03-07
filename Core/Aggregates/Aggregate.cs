@@ -2,6 +2,13 @@ using Core.Events;
 
 namespace Core.Aggregates;
 
+// https://www.eventstore.com/blog/what-is-event-sourcing
+// https://event-driven.io/en/how_to_get_the_current_entity_state_in_event_sourcing/?utm_source=event_sourcing_net
+// https://zimarev.com/blog/event-sourcing/entities-as-streams/
+// https://github.com/VenomAV/EventSourcingCQRS/blob/master/EventSourcingCQRS.Domain/Core/AggregateBase.cs
+// https://github.com/gautema/CQRSlite/blob/master/Framework/CQRSlite/Domain/AggregateRoot.cs
+// https://github.com/oskardudycz/EventSourcing.NetCore/blob/main/Core/Aggregates/Aggregate.cs
+// https://github.com/Eventuous/eventuous/blob/dev/src/Core/src/Eventuous/Aggregate.cs
 public abstract class Aggregate: Aggregate<Guid>, IAggregate
 {
 }

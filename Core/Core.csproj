@@ -19,4 +19,8 @@
     <ItemGroup>
       <ProjectReference Include="..\Core.Serialization\Core.Serialization.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Projections" />
+    </ItemGroup>
 </Project>
