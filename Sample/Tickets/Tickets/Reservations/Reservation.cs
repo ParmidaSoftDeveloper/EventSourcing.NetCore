@@ -7,7 +7,7 @@ using Tickets.Reservations.NumberGeneration;
 
 namespace Tickets.Reservations;
 
-public class Reservation : Aggregate
+public class Reservation : HaveAggregate
 {
     public Guid SeatId { get; private set; }
 

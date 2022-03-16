@@ -6,22 +6,22 @@ namespace ECommerce.ShoppingCarts;
 public record ShoppingCartInitialized(
     Guid ShoppingCartId,
     Guid ClientId
-): INotification;
+) : INotification;
 
 public record ProductItemAddedToShoppingCart(
     Guid ShoppingCartId,
     PricedProductItem ProductItem
-): INotification;
+) : INotification;
 
 public record ProductItemRemovedFromShoppingCart(
     Guid ShoppingCartId,
     PricedProductItem ProductItem
-): INotification;
+) : INotification;
 
 public record ShoppingCartConfirmed(
     Guid ShoppingCartId,
     DateTime ConfirmedAt
-): INotification;
+) : INotification;
 
 public enum ShoppingCartStatus
 {
@@ -37,8 +37,7 @@ public record ShoppingCart(
     Guid ClientId,
     ShoppingCartStatus Status,
     ProductItemsList ProductItems,
-    DateTime? ConfirmedAt = null
-)
+    DateTime? ConfirmedAt = null)
 {
     public bool IsClosed { get; } = Status.HasFlag(ShoppingCartStatus.Closed);
 

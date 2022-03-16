@@ -8,7 +8,7 @@ using Core.Projections;
 
 namespace Carts.ShoppingCarts.GettingCartById;
 
-public class ShoppingCartDetails: IVersionedProjection
+public class ShoppingCartDetails: IVersionedHaveAggregateStateProjection
 {
     public Guid Id { get; set; }
     public Guid ClientId { get; set; }

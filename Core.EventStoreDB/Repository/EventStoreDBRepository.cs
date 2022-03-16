@@ -7,7 +7,7 @@ using EventStore.Client;
 
 namespace Core.EventStoreDB.Repository;
 
-public interface IEventStoreDBRepository<T> where T : class, IAggregate
+public interface IEventStoreDBRepository<T> where T : class, IHaveAggregate
 {
     Task<T?> Find(Guid id, CancellationToken cancellationToken);
 
@@ -32,7 +32,7 @@ public interface IEventStoreDBRepository<T> where T : class, IAggregate
     );
 }
 
-public class EventStoreDBRepository<T>: IEventStoreDBRepository<T> where T : class, IAggregate
+public class EventStoreDBRepository<T>: IEventStoreDBRepository<T> where T : class, IHaveAggregate
 {
     private readonly EventStoreClient eventStore;
 

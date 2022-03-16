@@ -10,7 +10,7 @@ using Core.Extensions;
 namespace Carts.ShoppingCarts;
 
 // https://zimarev.com/blog/event-sourcing/entities-as-streams/
-public class ShoppingCart: Aggregate
+public class ShoppingCart: HaveAggregate
 {
     public Guid ClientId { get; private set; }
 

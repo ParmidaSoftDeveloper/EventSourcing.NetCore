@@ -3,11 +3,11 @@ using Core.Projections;
 
 namespace Core.Aggregates;
 
-public interface IAggregate: IAggregate<Guid>
+public interface IHaveAggregate: IHaveAggregate<Guid>
 {
 }
 
-public interface IAggregate<out T>: IProjection
+public interface IHaveAggregate<out T>: IHaveAggregateStateProjection
 {
     T Id { get; }
     int Version { get; }

@@ -4,7 +4,7 @@ using Marten;
 
 namespace Core.Marten.Repository;
 
-public interface IMartenRepository<T> where T : class, IAggregate
+public interface IMartenRepository<T> where T : class, IHaveAggregate
 {
     Task<T?> Find(Guid id, CancellationToken cancellationToken);
     Task<long> Add(T aggregate, TraceMetadata? eventMetadata = null, CancellationToken cancellationToken = default);
@@ -12,7 +12,7 @@ public interface IMartenRepository<T> where T : class, IAggregate
     Task<long> Delete(T aggregate, long? expectedVersion = null, TraceMetadata? eventMetadata = null, CancellationToken cancellationToken = default);
 }
 
-public class MartenRepository<T>: IMartenRepository<T> where T : class, IAggregate
+public class MartenRepository<T>: IMartenRepository<T> where T : class, IHaveAggregate
 {
     private readonly IDocumentSession documentSession;
 
@@ -33,7 +33,7 @@ public class MartenRepository<T>: IMartenRepository<T> where T : class, IAggrega
 
         var events = aggregate.DequeueUncommittedEvents();
 
-        documentSession.Events.StartStream<Aggregate>(
+        documentSession.Events.StartStream<HaveAggregate>(
             aggregate.Id,
             events
         );

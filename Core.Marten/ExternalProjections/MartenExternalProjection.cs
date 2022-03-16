@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Core.Marten.ExternalProjections;
 
 public class MartenExternalProjection<TEvent, TView>: IEventHandler<EventEnvelope<TEvent>>
-    where TView : IVersionedProjection
+    where TView : IVersionedHaveAggregateStateProjection
     where TEvent : notnull
 {
     private readonly IDocumentSession session;
@@ -56,7 +56,7 @@ public static class MartenExternalProjectionConfig
 {
     public static IServiceCollection Project<TEvent, TView>(this IServiceCollection services,
         Func<TEvent, Guid> getId)
-        where TView : class, IVersionedProjection
+        where TView : class, IVersionedHaveAggregateStateProjection
         where TEvent : notnull
     {
         services

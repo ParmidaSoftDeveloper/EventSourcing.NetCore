@@ -7,7 +7,7 @@ using Orders.Products;
 
 namespace Orders.Orders;
 
-public class Order: Aggregate
+public class Order: HaveAggregate
 {
     public Guid? ClientId { get; private set; }
 

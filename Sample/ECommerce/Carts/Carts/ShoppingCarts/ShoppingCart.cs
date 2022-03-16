@@ -9,7 +9,7 @@ using Core.Extensions;
 
 namespace Carts.ShoppingCarts;
 
-public class ShoppingCart: Aggregate
+public class ShoppingCart: HaveAggregate
 {
     public Guid ClientId { get; private set; }
 

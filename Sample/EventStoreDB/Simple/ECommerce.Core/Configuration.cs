@@ -1,4 +1,5 @@
 using System.Reflection;
+using Core;
 using Core.Events;
 using Core.EventStoreDB;
 using MediatR;

@@ -10,7 +10,7 @@ public static class RepositoryExtensions
         this IEventStoreDBRepository<T> repository,
         Guid id,
         CancellationToken ct
-    ) where T : class, IAggregate
+    ) where T : class, IHaveAggregate
     {
         var entity = await repository.Find(id, ct);
 
@@ -24,7 +24,7 @@ public static class RepositoryExtensions
         ulong? expectedVersion = null,
         TraceMetadata? traceMetadata = null,
         CancellationToken ct = default
-    ) where T : class, IAggregate
+    ) where T : class, IHaveAggregate
     {
         var entity = await repository.Get(id, ct);
 

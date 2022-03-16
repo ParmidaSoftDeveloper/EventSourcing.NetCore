@@ -19,7 +19,7 @@ public class ShoppingCartDetailsProductItem
     public decimal UnitPrice { get; set; }
 }
 //
-// public static class ShoppingCartDetailsProjection
+// public static class ShoppingCartDetailsReadProjection
 // {
 //     public static ShoppingCartDetails Handle(StreamEvent<ShoppingCartInitialized> @event)
 //     {

@@ -4,7 +4,7 @@ using SmartHome.Temperature.TemperatureMeasurements.StartingTemperatureMeasureme
 
 namespace SmartHome.Temperature.TemperatureMeasurements;
 
-public class TemperatureMeasurement: Aggregate
+public class TemperatureMeasurement: HaveAggregate
 {
     public DateTimeOffset Started { get; set; }
     public DateTimeOffset? LastRecorded { get; set; }

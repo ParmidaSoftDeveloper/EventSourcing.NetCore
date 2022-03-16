@@ -1,7 +1,7 @@
 using Core.Events;
 using Core.EventStoreDB.Events;
+using Core.Projections;
 using Core.Threading;
-using ECommerce.Core.Projections;
 using EventStore.Client;
 using Grpc.Core;
 using MediatR;

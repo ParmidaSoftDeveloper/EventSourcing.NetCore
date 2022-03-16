@@ -39,7 +39,7 @@ public enum InvoiceStatus
     Sent = 3
 }
 
-public class Invoice: Aggregate<string>
+public class Invoice: HaveAggregate<string>
 {
     public double Amount { get; private set; }
     public string Number { get; private set; } = default!;

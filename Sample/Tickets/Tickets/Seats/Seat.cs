@@ -2,7 +2,7 @@ using Core.Aggregates;
 
 namespace Tickets.Seats;
 
-public class Seat : Aggregate
+public class Seat : HaveAggregate
 {
     public Guid ConcertId { get; private set; }
 

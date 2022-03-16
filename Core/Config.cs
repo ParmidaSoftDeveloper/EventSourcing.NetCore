@@ -1,7 +1,9 @@
+using System.Reflection;
 using Core.Commands;
 using Core.Events;
 using Core.Events.External;
 using Core.Ids;
+using Core.Projections;
 using Core.Queries;
 using Core.Requests;
 using Core.Tracing;
@@ -59,5 +61,24 @@ public static class Config
         return services
             .AddScoped<IMediator, Mediator>()
             .AddTransient<ServiceFactory>(sp => sp.GetRequiredService!);
+    }
+
+    public static IServiceCollection AddProjections(this IServiceCollection services, params Assembly[] assemblies)
+    {
+        services.AddSingleton<IProjectionPublisher, ProjectionPublisher>();
+        var assembliesToScan = assemblies.Any() ? assemblies : new[] { Assembly.GetEntryAssembly() };
+
+        RegisterProjections(services, assembliesToScan!);
+
+        return services;
+    }
+
+    private static void RegisterProjections(IServiceCollection services, Assembly[] assembliesToScan)
+    {
+        services.Scan(scan => scan
+            .FromAssemblies(assembliesToScan)
+            .AddClasses(classes => classes.AssignableTo<IHaveAggregateStateProjection>()) // Filter classes
+            .AsImplementedInterfaces()
+            .WithTransientLifetime());
     }
 }

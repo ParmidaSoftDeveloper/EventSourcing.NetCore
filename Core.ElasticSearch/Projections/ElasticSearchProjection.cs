@@ -8,7 +8,7 @@ using Nest;
 namespace Core.ElasticSearch.Projections;
 
 public class ElasticSearchProjection<TEvent, TView> : IEventHandler<EventEnvelope<TEvent>>
-    where TView : class, IProjection
+    where TView : class, IHaveAggregateStateProjection
     where TEvent : IEvent
 {
     private readonly IElasticClient elasticClient;
@@ -45,7 +45,7 @@ public static class ElasticSearchProjectionConfig
 {
     public static IServiceCollection Project<TEvent, TView>(this IServiceCollection services,
         Func<TEvent, string> getId)
-        where TView : class, IProjection
+        where TView : class, IHaveAggregateStateProjection
         where TEvent : IEvent
     {
         services.AddTransient<IEventHandler<EventEnvelope<TEvent>>>(sp =>

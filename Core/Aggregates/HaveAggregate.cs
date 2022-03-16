@@ -7,13 +7,13 @@ namespace Core.Aggregates;
 // https://zimarev.com/blog/event-sourcing/entities-as-streams/
 // https://github.com/VenomAV/EventSourcingCQRS/blob/master/EventSourcingCQRS.Domain/Core/AggregateBase.cs
 // https://github.com/gautema/CQRSlite/blob/master/Framework/CQRSlite/Domain/AggregateRoot.cs
-// https://github.com/oskardudycz/EventSourcing.NetCore/blob/main/Core/Aggregates/Aggregate.cs
-// https://github.com/Eventuous/eventuous/blob/dev/src/Core/src/Eventuous/Aggregate.cs
-public abstract class Aggregate: Aggregate<Guid>, IAggregate
+// https://github.com/oskardudycz/EventSourcing.NetCore/blob/main/Core/Aggregates/HaveAggregate.cs
+// https://github.com/Eventuous/eventuous/blob/dev/src/Core/src/Eventuous/HaveAggregate.cs
+public abstract class HaveAggregate: HaveAggregate<Guid>, IHaveAggregate
 {
 }
 
-public abstract class Aggregate<T>: IAggregate<T> where T : notnull
+public abstract class HaveAggregate<T>: IHaveAggregate<T> where T : notnull
 {
     public T Id { get; protected set; } = default!;
 

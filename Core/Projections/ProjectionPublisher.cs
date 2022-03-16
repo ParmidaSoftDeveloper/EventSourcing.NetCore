@@ -2,7 +2,7 @@ using Core.Events;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ECommerce.Core.Projections;
+namespace Core.Projections;
 
 public class ProjectionPublisher: IProjectionPublisher
 {
@@ -17,7 +17,7 @@ public class ProjectionPublisher: IProjectionPublisher
         where T : INotification
     {
         using var scope = _serviceProvider.CreateScope();
-        var projections = scope.ServiceProvider.GetRequiredService<IEnumerable<IProjection>>();
+        var projections = scope.ServiceProvider.GetRequiredService<IEnumerable<IReadProjection>>();
         foreach (var projection in projections)
         {
             await projection.ProjectAsync(streamEvent, cancellationToken);

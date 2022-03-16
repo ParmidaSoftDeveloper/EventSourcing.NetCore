@@ -28,7 +28,7 @@ internal class CartBuilder
     public ShoppingCart Build()
     {
         var cart = build();
-        ((IAggregate)cart).DequeueUncommittedEvents();
+        ((IHaveAggregate)cart).DequeueUncommittedEvents();
         return cart;
     }
 }

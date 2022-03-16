@@ -4,7 +4,7 @@ using Core.Tracing;
 
 namespace Tickets.Tests.Stubs.Storage;
 
-public class FakeRepository<T> : IMartenRepository<T> where T : class, IAggregate
+public class FakeRepository<T> : IMartenRepository<T> where T : class, IHaveAggregate
 {
     public Dictionary<Guid, T> Aggregates { get; private set; }
 

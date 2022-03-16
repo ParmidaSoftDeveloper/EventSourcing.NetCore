@@ -7,14 +7,14 @@ namespace Core.Marten.Aggregates;
 public static class AggregateExtensions
 {
     public static async Task StoreAndPublishEvents(
-        this IAggregate aggregate,
+        this IHaveAggregate haveAggregate,
         IDocumentSession session,
         IEventBus eventBus,
         CancellationToken cancellationToken = default
     )
     {
-        var uncommitedEvents = aggregate.DequeueUncommittedEvents();
-        session.Events.Append(aggregate.Id, uncommitedEvents);
+        var uncommitedEvents = haveAggregate.DequeueUncommittedEvents();
+        session.Events.Append(haveAggregate.Id, uncommitedEvents);
         await session.SaveChangesAsync(cancellationToken);
         await eventBus.Publish(uncommitedEvents, cancellationToken);
     }

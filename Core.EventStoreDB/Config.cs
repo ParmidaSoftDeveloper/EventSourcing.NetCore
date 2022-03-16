@@ -2,7 +2,7 @@ using System.Reflection;
 using Core.BackgroundWorkers;
 using Core.EventStoreDB.OptimisticConcurrency;
 using Core.EventStoreDB.Subscriptions;
-using ECommerce.Core.Projections;
+using Core.Projections;
 using EventStore.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -70,25 +70,5 @@ public static class EventStoreDBConfigExtensions
                 );
             }
         );
-    }
-
-    public static IServiceCollection AddProjections(this IServiceCollection services, params Assembly[] assemblies)
-    {
-        services.AddSingleton<IProjectionPublisher, ProjectionPublisher>();
-        var assembliesToScan = assemblies.Any() ? assemblies : new[] { Assembly.GetEntryAssembly() };
-
-        RegisterProjections(services, assembliesToScan!);
-
-        return services;
-    }
-
-
-    private static void RegisterProjections(IServiceCollection services, Assembly[] assembliesToScan)
-    {
-        services.Scan(scan => scan
-            .FromAssemblies(assembliesToScan)
-            .AddClasses(classes => classes.AssignableTo<IProjection>()) // Filter classes
-            .AsImplementedInterfaces()
-            .WithTransientLifetime());
     }
 }

@@ -6,7 +6,7 @@ using Payments.Payments.TimingOutPayment;
 
 namespace Payments.Payments;
 
-public class Payment: Aggregate
+public class Payment: HaveAggregate
 {
     public Guid OrderId { get; private set; }
 

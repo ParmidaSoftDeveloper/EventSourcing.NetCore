@@ -2,7 +2,7 @@ using Core.Aggregates;
 
 namespace Tickets.Concerts;
 
-public class Concert : Aggregate
+public class Concert : HaveAggregate
 {
     public string Name { get; private set; }
 

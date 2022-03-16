@@ -1,5 +1,5 @@
 using Core.Events;
-using ECommerce.Core.Projections;
+using Core.Projections;
 using ECommerce.Storage;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore;
 namespace ECommerce.ShoppingCarts.GettingCartById;
 
 // https://zimarev.com/blog/event-sourcing/projections/
-public class ShoppingCartDetailsProjection: IProjection
+public class ShoppingCartDetailsReadProjection: IReadProjection
 {
     private readonly ECommerceDbContext eCommerceDbContext;
 
-    public ShoppingCartDetailsProjection(ECommerceDbContext eCommerceDbContext)
+    public ShoppingCartDetailsReadProjection(ECommerceDbContext eCommerceDbContext)
     {
         this.eCommerceDbContext = eCommerceDbContext;
     }

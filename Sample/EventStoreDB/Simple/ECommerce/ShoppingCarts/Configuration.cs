@@ -46,20 +46,20 @@ public static class Configuration
             )
             // .For<ShoppingCartDetails, ECommerceDbContext>(
             //     builder => builder
-            //         .AddOn<ShoppingCartInitialized>(ShoppingCartDetailsProjection.Handle)
+            //         .AddOn<ShoppingCartInitialized>(ShoppingCartDetailsReadProjection.Handle)
             //         .UpdateOn<ProductItemAddedToShoppingCart>(
             //             e => e.ShoppingCartId,
-            //             ShoppingCartDetailsProjection.Handle,
+            //             ShoppingCartDetailsReadProjection.Handle,
             //             (entry, ct) => entry.Collection(x => x.ProductItems).LoadAsync(ct)
             //         )
             //         .UpdateOn<ProductItemRemovedFromShoppingCart>(
             //             e => e.ShoppingCartId,
-            //             ShoppingCartDetailsProjection.Handle,
+            //             ShoppingCartDetailsReadProjection.Handle,
             //             (entry, ct) => entry.Collection(x => x.ProductItems).LoadAsync(ct)
             //         )
             //         .UpdateOn<ShoppingCartConfirmed>(
             //             e => e.ShoppingCartId,
-            //             ShoppingCartDetailsProjection.Handle
+            //             ShoppingCartDetailsReadProjection.Handle
             //         )
             //         .QueryWith<GetCartById>(GetCartById.Handle)
             // )

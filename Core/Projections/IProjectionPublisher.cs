@@ -1,7 +1,7 @@
 using Core.Events;
 using MediatR;
 
-namespace ECommerce.Core.Projections;
+namespace Core.Projections;
 
 public interface IProjectionPublisher
 {

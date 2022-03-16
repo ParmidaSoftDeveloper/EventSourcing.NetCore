@@ -31,7 +31,7 @@ internal class ReservationBuilder
     public Reservation Build()
     {
         var reservation = build();
-        ((IAggregate)reservation).DequeueUncommittedEvents();
+        ((IHaveAggregate)reservation).DequeueUncommittedEvents();
         return reservation;
     }
 }

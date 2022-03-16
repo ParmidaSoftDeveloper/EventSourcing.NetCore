@@ -4,7 +4,7 @@ using Core.Tracing;
 
 namespace Carts.Tests.Stubs.Repositories;
 
-public class FakeRepository<T> : IEventStoreDBRepository<T> where T : class, IAggregate
+public class FakeRepository<T> : IEventStoreDBRepository<T> where T : class, IHaveAggregate
 {
     public Dictionary<Guid, T> Aggregates { get; private set; }
 

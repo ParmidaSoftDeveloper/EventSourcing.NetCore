@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace MeetingsSearch.Meetings;
 
-public class Meeting: Aggregate
+public class Meeting: HaveAggregate
 {
     public string Name { get; private set; } = default!;
 

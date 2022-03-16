@@ -5,7 +5,7 @@ using MeetingsManagement.Meetings.ValueObjects;
 
 namespace MeetingsManagement.Meetings;
 
-public class Meeting: Aggregate
+public class Meeting: HaveAggregate
 {
     public string Name { get; private set; } = default!;
 

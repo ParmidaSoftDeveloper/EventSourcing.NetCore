@@ -3,7 +3,7 @@ using SmartHome.Temperature.MotionSensors.InstallingMotionSensor;
 
 namespace SmartHome.Temperature.MotionSensors;
 
-public class MotionSensor: Aggregate
+public class MotionSensor: HaveAggregate
 {
     public DateTime InstalledAt { get; private set; }
 

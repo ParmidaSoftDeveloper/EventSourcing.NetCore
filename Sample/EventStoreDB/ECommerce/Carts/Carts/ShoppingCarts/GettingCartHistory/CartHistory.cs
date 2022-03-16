@@ -6,7 +6,7 @@ using Core.Projections;
 
 namespace Carts.ShoppingCarts.GettingCartHistory;
 
-public class CartHistory: IVersionedProjection
+public class CartHistory: IVersionedHaveAggregateStateProjection
 {
     public Guid Id { get; set;}
     public Guid CartId { get; set;}
