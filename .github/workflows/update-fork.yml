@@ -5,6 +5,11 @@ on:
 jobs:
   updateFork:
     runs-on: ubuntu-latest
+    
+    permissions:
+      pull-requests: write 
+      contents: read
+      
     steps:
       - uses: actions/checkout@v3
         with:
